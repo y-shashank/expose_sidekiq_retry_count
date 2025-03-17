@@ -1,7 +1,8 @@
 # ExposeSidekiqRetryCount
 
 This gem defines a sidekiq middleware which exposes the sidekiq job's retry counter value inside the job for easy access.
-Similar to accessor `batch` it can be accessed anywhere inside job
+This gem is also accurately tracks if a job is superfetched without using any extra redis memory and this property is made easily accessible inside the job itself like the `batch` or `jid` property
+Now each job will be able to access its `current_retry_count` (integer) and `this_job_is_superfetched` (boolean) property
 
 ## Installation
 
@@ -10,6 +11,11 @@ STEP 1: In gemfile add the follwing gem and run bundle install
 ```
 gem 'expose_sidekiq_retry_count', git: 'https://github.com/punchh/expose_sidekiq_retry_count'
 ```
+OR
+```
+gem 'expose_sidekiq_retry_count', git: 'https://github.com/punchh/expose_sidekiq_retry_count', tag: '1.0.0'
+```
+
 
 STEP 2: Add the following middleware inside `sidekiq.rb`
 
