@@ -39,6 +39,8 @@ end
 
 STEP 4: (Optional) Define global `$sidekiq_redis` redis connection to sidekiq redis inside a initializer. This will inject a new property `this_job_is_superfetched` in every job which is a boolean field and it will return true if this jobs has been superfetched
 
+Inside `initializers/redis.rb`
+
 ```
 class RedisSetup
   def self.setup(redis_config)
@@ -54,6 +56,21 @@ end
 $sidekiq_redis = RedisSetup.setup($redis_configs[:sidekiq])
 ```
 
+Inside `initializers/sidekiq.rb`
+
+```
+require "sidekiq/pro/super_fetch"
+
+module Sidekiq::Pro
+  class SuperFetch
+    def bulk_requeue(*)
+      # we dont want this method to do anything
+      # this runs when TERM singal is received by sidekiq pod
+      # if we dont override this method then :this_job_is_superfetched accessor is not reliable
+    end
+  end
+end
+```
 
 ## Usage
 
@@ -61,13 +78,13 @@ Inside any job you can access `current_retry_count` directly
 
 ```
 class BulkRewardMakingWorker < ApplicationWorker
-    def perform
-        if current_retry_count == 0
-            # no need to check for duplicate gifting
-        else
-            # check for double gifting
-        end
+  def perform
+    if current_retry_count == 0
+      # no need to check for duplicate gifting
+    else
+      # check for double gifting
     end
+  end
 end
 ```
 
@@ -75,12 +92,12 @@ Optional - If STEP 4 of installation is done
 
 ```
 class BulkRewardMakingWorker < ApplicationWorker
-    def perform
-        if !this_job_is_superfetched
-            # no need to check for duplicate gifting
-        else
-            # check for double gifting
-        end
+  def perform
+    if !this_job_is_superfetched
+      # no need to check for duplicate gifting
+    else
+      # check for double gifting
     end
+  end
 end
 ```
