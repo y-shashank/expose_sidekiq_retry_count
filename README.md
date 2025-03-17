@@ -8,7 +8,7 @@ Similar to accessor `batch` it can be accessed anywhere inside job
 STEP 1: In gemfile add the follwing gem and run bundle install
 
 ```
-gem 'expose_sidekiq_retry_count', git: 'https://github.com/punchh/expose_sidekiq_retry_count'
+gem 'expose_sidekiq_retry_count', git: 'https://github.com/punchh/expose_sidekiq_retry_count', tag: '1.0.0'
 ```
 
 STEP 2: Add the following middleware inside `sidekiq.rb`
