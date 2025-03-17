@@ -8,7 +8,7 @@ module ExposeSidekiqRetryCount
 
   class ServerMiddleware
     def call(worker, job, queue)
-      worker.current_retry_count = job['retry_count'] if worker.respond_to?(:retry_count=)
+      worker.current_retry_count = job['retry_count'] if worker.respond_to?(:current_retry_count=)
       yield
     end
   end
