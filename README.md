@@ -4,6 +4,8 @@ This gem defines a sidekiq middleware which exposes the sidekiq job's retry coun
 This gem is also accurately tracks if a job is superfetched without using any extra redis memory and this property is made easily accessible inside the job itself like the `batch` or `jid` property
 Now each job will be able to access its `current_retry_count` (integer) and `this_job_is_superfetched` (boolean) property
 
+The ability to accurately track the `superfetched` property of a particular will allow us to reduce/remove extra redis locks from application logic
+
 ## Installation
 
 STEP 1: In gemfile add the follwing gem and run bundle install
