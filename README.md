@@ -5,7 +5,13 @@ Similar to accessor `batch` it can be accessed anywhere inside job
 
 ## Installation
 
-Add the following middleware inside `sidekiq.rb`
+STEP 1: In gemfile add the follwing gem and run bundle install
+
+```
+gem 'expose_sidekiq_retry_count', git: 'https://github.com/punchh/expose_sidekiq_retry_count'
+```
+
+STEP 2: Add the following middleware inside `sidekiq.rb`
 
 ```
 
@@ -17,12 +23,7 @@ end
 
 ```
 
-
-
-
-## Usage
-
-Inside `ApplicationWorker` add define the following accssor and method so its available to all sidekiq jobs
+STEP 3: Inside `ApplicationWorker` add define the following accssor and method so its available to all sidekiq jobs
 
 ```
 class ApplicationWorker
@@ -35,6 +36,9 @@ class ApplicationWorker
 end
 
 ```
+
+
+## Usage
 
 Inside any job you can access `current_retry_count` directly
 
