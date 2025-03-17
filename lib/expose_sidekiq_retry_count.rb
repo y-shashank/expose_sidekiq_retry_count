@@ -4,7 +4,6 @@ require_relative "expose_sidekiq_retry_count/version"
 
 module ExposeSidekiqRetryCount
   class Error < StandardError; end
-  # Your code goes here...
 
   class ServerMiddleware
     def call(worker, job, queue)
@@ -14,6 +13,9 @@ module ExposeSidekiqRetryCount
                                      else
                                         job['retry_count'].to_i + 1
                                      end
+      end
+      if $sidekiq_redis && worker.respond_to?(:this_job_is_superfetched=)
+        worker.this_job_is_superfetched = $sidekiq_redis.get("orphan-#{job['jid']}").to_i > 0
       end
       yield
     end
