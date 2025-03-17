@@ -35,3 +35,17 @@ class ApplicationWorker
 end
 
 ```
+
+Inside any job you can access `current_retry_count` directly
+
+```
+class BulkRewardMakingWorker < ApplicationWorker
+    def perform
+        if current_retry_count == 0
+            # no need to check for duplicate gifting
+        else
+            # check for double gifting
+        end
+    end
+end
+```
