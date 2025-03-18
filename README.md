@@ -83,24 +83,23 @@ end
 
 OR
 
-If you want to use the base feature of the gem without the optional (superfetched tracking) then we can either not add the STEP 4 code or use a ENV variable (like below) to control if its activated in a particular service. For example we have multiple services running on same punchh-server code base but we dont want this superfetch tracking in every service so we can control it via ENV variable
+For example we have multiple services running on same punchh-server code base but we dont want this superfetch tracking in every service so we can control it via ENV variable
 
 ```
-require "sidekiq/pro/super_fetch"
-
 if ENV['ENABLE_OPTIONAL_FEATURE']
-module Sidekiq::Pro
-  class SuperFetch
-    def bulk_requeue(*)
-      # we dont want this method to do anything
-      # this runs when TERM singal is received by sidekiq pod
-      # if we dont override this method then :this_job_is_superfetched accessor is not reliable
+  require "sidekiq/pro/super_fetch"
+  
+  module Sidekiq::Pro
+    class SuperFetch
+      def bulk_requeue(*)
+        # we dont want this method to do anything
+        # this runs when TERM singal is received by sidekiq pod
+        # if we dont override this method then :this_job_is_superfetched accessor is not reliable
+      end
     end
   end
 end
 ```
-
-
 
 ## Usage
 
