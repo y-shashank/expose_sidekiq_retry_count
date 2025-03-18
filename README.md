@@ -31,22 +31,7 @@ end
 
 ```
 
-STEP 3: Inside `ApplicationWorker` add define the following accssor and method so its available to all sidekiq jobs
-
-```
-class ApplicationWorker
-  include Sidekiq::Worker
-  attr_accessor :current_retry_count
-  attr_accessor :this_job_is_superfetched # optional, only do this if STEP 4 of installation is done
-
-  def current_retry_count
-    @current_retry_count || 0
-  end
-end
-
-```
-
-STEP 4: (Optional) Define global `$sidekiq_redis` redis connection to sidekiq redis inside a initializer. This will inject a new property `this_job_is_superfetched` in every job which is a boolean field and it will return true if this jobs has been superfetched
+STEP 3: (Optional) Define global `$sidekiq_redis` redis connection to sidekiq redis inside a initializer with appropriate namespace if present & set a ENV variable `EXPOSE_IF_SUPERFETCHED_IN_JOB=true`. This will inject a new property `this_job_is_superfetched` in every job which is a boolean field and it will return true if this jobs has been superfetched
 
 Inside `initializers/redis.rb`
 
@@ -63,42 +48,6 @@ class RedisSetup
 end
 
 $sidekiq_redis = RedisSetup.setup($redis_configs[:sidekiq])
-```
-
-Inside `initializers/sidekiq.rb`
-
-```
-require "sidekiq/pro/super_fetch"
-
-module Sidekiq::Pro
-  class SuperFetch
-    def bulk_requeue(*)
-      # we dont want this method to do anything
-      # this runs when TERM singal is received by sidekiq pod
-      # if we dont override this method then :this_job_is_superfetched accessor is not reliable
-    end
-  end
-end
-```
-
-OR
-
-For example we have multiple services running on same punchh-server code base but we dont want this superfetch tracking in every service so we can control it via ENV variable
-
-```
-if ENV['ENABLE_OPTIONAL_FEATURE']
-  require "sidekiq/pro/super_fetch"
-  
-  module Sidekiq::Pro
-    class SuperFetch
-      def bulk_requeue(*)
-        # we dont want this method to do anything
-        # this runs when TERM singal is received by sidekiq pod
-        # if we dont override this method then :this_job_is_superfetched accessor is not reliable
-      end
-    end
-  end
-end
 ```
 
 ## Usage
