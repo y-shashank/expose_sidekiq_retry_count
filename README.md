@@ -81,6 +81,27 @@ module Sidekiq::Pro
 end
 ```
 
+OR
+
+If you want to use the base feature of the gem without the optional (superfetched tracking) then we can either not add the STEP 4 code or use a ENV variable (like below) to control if its activated in a particular service. For example we have multiple services running on same punchh-server code base but we dont want this superfetch tracking in every service so we can control it via ENV variable
+
+```
+require "sidekiq/pro/super_fetch"
+
+if ENV['ENABLE_OPTIONAL_FEATURE']
+module Sidekiq::Pro
+  class SuperFetch
+    def bulk_requeue(*)
+      # we dont want this method to do anything
+      # this runs when TERM singal is received by sidekiq pod
+      # if we dont override this method then :this_job_is_superfetched accessor is not reliable
+    end
+  end
+end
+```
+
+
+
 ## Usage
 
 Inside any job you can access `current_retry_count` directly
@@ -114,11 +135,11 @@ end
 # Sidekiq SuperFetch Internals
 
 There are 3 methods inside superfetch from where we move jobs from private queues back to normal queues
-1. bulk_requeue
-2. check_for_orphans
-3. cleanup_the_dead
+1. bulk_requeue - Runs on POD termination
+2. check_for_orphans - Runs on POD startup
+3. cleanup_the_dead - Runs on POD startup
 
 In `check_for_orphans` `cleanup_the_dead` a LUA script runs for each jobs it recoveres and inside the script it create/increments a key inside sidekiq redis `orphan-#{jid}` we use this existing key to tell if a particular job is superfetched. The problem is with `bulk_requeue` which runs when a POD receives TERM signal and as a cleanup-step sidekiq run the following redis command in loop `conn.lmove(working_queue, queue, "RIGHT", "LEFT")` till all jobs are moved from provate queue to normal queue, but does not sets the above mentioned `orphan-#{jid}` key hence it caused problems in our tracking. So to make the tracking accurate we override this `bulk_requeue` method to do nothing. Hence all orphan jobs are recovered using `check_for_orphans` `cleanup_the_dead` methods which should be fine as the LUA sciprt interally uses the same LMOVE command.
 
-This way we make the tracking accurate and reliable, but the only downside is this increases the latency between when POD is killed and when the job is recovered
+This way we make the tracking accurate and reliable, but the only downside is this increases the latency between when POD is killed and when the job is recovered becuase now when the POD is terminating it will not push jobs back to the queue and it will wait for orphans to be recovered everytime. This delay will be insignificant for services which are scaled up/down frequently
 
