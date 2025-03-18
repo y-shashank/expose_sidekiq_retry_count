@@ -37,6 +37,7 @@ STEP 3: Inside `ApplicationWorker` add define the following accssor and method s
 class ApplicationWorker
   include Sidekiq::Worker
   attr_accessor :current_retry_count
+  attr_accessor :this_job_is_superfetched # optional, only do this if STEP 4 of installation is done
 
   def current_retry_count
     @current_retry_count || 0
@@ -119,5 +120,5 @@ There are 3 methods inside superfetch from where we move jobs from private queue
 
 In `check_for_orphans` `cleanup_the_dead` a LUA script runs for each jobs it recoveres and inside the script it create/increments a key inside sidekiq redis `orphan-#{jid}` we use this existing key to tell if a particular job is superfetched. The problem is with `bulk_requeue` which runs when a POD receives TERM signal and as a cleanup-step sidekiq run the following redis command in loop `conn.lmove(working_queue, queue, "RIGHT", "LEFT")` till all jobs are moved from provate queue to normal queue, but does not sets the above mentioned `orphan-#{jid}` key hence it caused problems in our tracking. So to make the tracking accurate we override this `bulk_requeue` method to do nothing. Hence all orphan jobs are recovered using `check_for_orphans` `cleanup_the_dead` methods which should be fine as the LUA sciprt interally uses the same LMOVE command.
 
-This way we make the tracking accurate and reliable
+This way we make the tracking accurate and reliable, but the only downside is this increases the latency between when POD is killed and when the job is recovered
 
