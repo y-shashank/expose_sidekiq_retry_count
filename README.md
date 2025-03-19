@@ -31,6 +31,14 @@ end
 
 ```
 
+Inside `ApplicationWorker` and `ApplicationJob` include the `ExposeSidekiqRetryCount::Properties` module
+
+```
+class ApplicationWorker
+  include ExposeSidekiqRetryCount::Properties
+end
+```
+
 STEP 3: (Optional) Define global `$sidekiq_redis` redis connection to sidekiq redis inside a initializer with appropriate namespace if present & set a ENV variable `EXPOSE_IF_SUPERFETCHED_IN_JOB=true`. This will inject a new property `this_job_is_superfetched` in every job which is a boolean field and it will return true if this jobs has been superfetched
 
 Inside `initializers/redis.rb`
@@ -66,7 +74,7 @@ class BulkRewardMakingWorker < ApplicationWorker
 end
 ```
 
-Optional - If STEP 4 of installation is done
+Optional - If STEP 4 of installation is done we can use `this_job_is_superfetched` inside job
 
 ```
 class BulkRewardMakingWorker < ApplicationWorker
