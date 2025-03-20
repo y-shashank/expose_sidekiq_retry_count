@@ -5,6 +5,7 @@ This gem is also accurately tracks if a job is superfetched without using any ex
 Now each job will be able to access its `current_retry_count` (integer) and `this_job_is_superfetched` (boolean) property
 
 The ability to accurately track the `superfetched` property of a particular will allow us to reduce/remove extra redis locks from application logic
+It will automatically log these value inside Newrelic (if defined? ::NewRelic::Agent) for every transactions which are processed the service where this is intalled
 
 ## Installation
 

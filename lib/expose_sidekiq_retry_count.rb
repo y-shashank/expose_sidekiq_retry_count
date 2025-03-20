@@ -93,7 +93,9 @@ module ExposeSidekiqRetryCount
       if $sidekiq_redis && worker.respond_to?(:this_job_is_superfetched=)
         worker.this_job_is_superfetched = !$sidekiq_redis.get("orphan-#{job['jid']}").nil?
       end
-      ::NewRelic::Agent.add_custom_attributes({job_retry_count: worker.current_retry_count, superfetched: worker.this_job_is_superfetched}) rescue nil
+      if defined?(::NewRelic::Agent)
+        ::NewRelic::Agent.add_custom_attributes({job_retry_count: worker.current_retry_count, superfetched: worker.this_job_is_superfetched}) rescue nil
+      end
       yield
     end
   end
