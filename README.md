@@ -40,24 +40,8 @@ class ApplicationWorker
 end
 ```
 
-STEP 3: (Optional) Define global `$sidekiq_redis` redis connection to sidekiq redis inside a initializer with appropriate namespace if present & set a ENV variable `EXPOSE_IF_SUPERFETCHED_IN_JOB=true`. This will inject a new property `this_job_is_superfetched` in every job which is a boolean field and it will return true if this jobs has been superfetched
+STEP 3: (Optional) Set a ENV variable `EXPOSE_IF_SUPERFETCHED_IN_JOB=true`. This will inject a new property `this_job_is_superfetched` in every job which is a boolean field and it will return true if this jobs has been superfetched
 
-Inside `initializers/redis.rb`
-
-```
-class RedisSetup
-  def self.setup(redis_config)
-    redis = Redis.new(host: redis_config[:host],
-                  port: redis_config[:port],
-                  driver: redis_config[:driver].to_sym,
-                  password: redis_config[:password],
-                  reconnect_attempts: 10)
-    Redis::Namespace.new(redis_config[:namespace], redis: redis)
-  end
-end
-
-$sidekiq_redis = RedisSetup.setup($redis_configs[:sidekiq])
-```
 
 ## Usage
 
@@ -75,7 +59,7 @@ class BulkRewardMakingWorker < ApplicationWorker
 end
 ```
 
-Optional - If STEP 4 of installation is done we can use `this_job_is_superfetched` inside job
+Optional - If STEP 3 of installation is done we can use `this_job_is_superfetched` inside job
 
 ```
 class BulkRewardMakingWorker < ApplicationWorker

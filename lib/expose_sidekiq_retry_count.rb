@@ -81,6 +81,7 @@ module ExposeSidekiqRetryCount
 
 
   class ServerMiddleware
+    include Sidekiq::ServerMiddleware
     def call(worker, job, queue)
       if worker.respond_to?(:current_retry_count=)
         worker.current_retry_count = if job['retry_count'].nil?
@@ -91,7 +92,8 @@ module ExposeSidekiqRetryCount
       end
 
       if $sidekiq_redis && worker.respond_to?(:this_job_is_superfetched=)
-        worker.this_job_is_superfetched = !$sidekiq_redis.get("orphan-#{job['jid']}").nil?
+        is_superfetched = redis { |conn| conn.get("orphan-#{job['jid']}") }
+        worker.this_job_is_superfetched = !is_superfetched.nil?
       end
       if defined?(::NewRelic::Agent)
         ::NewRelic::Agent.add_custom_attributes({job_retry_count: worker.current_retry_count, superfetched: worker.this_job_is_superfetched}) rescue nil
