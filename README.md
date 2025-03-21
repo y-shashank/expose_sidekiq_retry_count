@@ -12,11 +12,11 @@ It will automatically log these value inside Newrelic (if defined? ::NewRelic::A
 STEP 1: In gemfile add the follwing gem and run bundle install
 
 ```
-gem 'expose_sidekiq_retry_count', git: 'https://github.com/punchh/expose_sidekiq_retry_count'
+gem 'expose_sidekiq_retry_count', git: 'https://github.com/y-shashank/expose_sidekiq_retry_count'
 ```
 OR
 ```
-gem 'expose_sidekiq_retry_count', git: 'https://github.com/punchh/expose_sidekiq_retry_count', tag: '1.0.0'
+gem 'expose_sidekiq_retry_count', git: 'https://github.com/y-shashank/expose_sidekiq_retry_count', tag: '1.0.0'
 ```
 
 
