@@ -86,7 +86,7 @@ module ExposeSidekiqRetryCount
                                      end
       end
 
-      if $sidekiq_redis && worker.respond_to?(:this_job_is_superfetched=)
+      if ENV['EXPOSE_IF_SUPERFETCHED_IN_JOB'] && worker.respond_to?(:this_job_is_superfetched=)
         is_superfetched = redis { |conn| conn.get("orphan-#{job['jid']}") }
         worker.this_job_is_superfetched = !is_superfetched.nil?
       end
