@@ -65,20 +65,15 @@ module ExposeSidekiqRetryCount
   class Error < StandardError; end
 
   module Properties
-    attr_accessor :current_retry_count
+    attr_accessor :current_retry_count, :this_job_is_superfetched
     def current_retry_count
       @current_retry_count || 0
     end
 
-    if ENV['EXPOSE_IF_SUPERFETCHED_IN_JOB']
-      attr_accessor :this_job_is_superfetched
-
-      def this_job_is_superfetched
-        @this_job_is_superfetched || false
-      end
+    def this_job_is_superfetched
+      @this_job_is_superfetched
     end
   end
-
 
   class ServerMiddleware
     include Sidekiq::ServerMiddleware
