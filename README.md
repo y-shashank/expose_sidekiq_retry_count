@@ -69,8 +69,7 @@ There are 2 methods inside superfetch from where we move jobs from private queue
 1. bulk_requeue      - Runs on POD termination. This can happen for inifinite times
 2. check_for_orphans - Runs on POD startup. This will only happen 3 times after which the job is moved to Dead Queue (Poison Killed)
 
-The Last Dead Cleanup Function
-cleanup_the_dead  - This is technically not receovery since this job will never run now. Runs on POD startup. This will only run 1 time and it will move job back to Dead Queue
+The Last Dead Cleanup Function `cleanup_the_dead`  - This is technically not receovery since this job will never run now. Runs on POD startup. This will only run 1 time and it will move job back to Dead Queue
 
 The jobs recovered from 2nd (check_for_orphans) are called orphan jobs becasue they are getting recovered by another brand new process which is booting up. The orginal parent process was unable to superfetch its jobs itself for some reason.
 Orphan Job Recovery will only happen 3 times after that this job will be moved to Dead Queue and this process is call Poison Kill.
