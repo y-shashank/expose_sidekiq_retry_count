@@ -63,7 +63,7 @@ end
 
 # Sidekiq SuperFetch Internals
 
-Superfetch - Not 100% accurate but for understanding purpose. Superfetch is a sidekiq-pros mechanism which ensures that in event of process crash or termination the in-progress jobs are not lost. Each process maintains its own private queue (in redis itself not RAM) and it basically involes moving jobs from pod's `private_queue` back to `public queue` using redis `lmove`. 
+Superfetch - Superfetch is a sidekiq-pros mechanism which ensures that in event of process crash or termination the in-progress jobs are not lost. Each process maintains its own private queue (in redis itself not RAM) and it basically involes moving jobs from pod's `private_queue` back to `public queue` using redis `lmove`. 
 
 There are 3 methods inside superfetch from where we move jobs from private queues back to normal queues
 1. bulk_requeue - Runs on POD termination
@@ -74,7 +74,7 @@ The jobs recovered from 2nd (check_for_orphans) and 3rd (cleanup_the_dead) are c
 Orphan Job Recovery will only happen 3 times after that this job will be moved to Dead Queue and this process is call Poison Kill.
 
 In `check_for_orphans` `cleanup_the_dead` a LUA script runs for each jobs it recoveres. Inside the script it create/increments a key inside sidekiq redis `orphan-#{jid}` (1 -> 2 ->3 -> Poison Kill) we use this existing key to tell if a particular job is superfetched. The problem is with `bulk_requeue` is that it only runs when a POD receives TERM signal and as a cleanup-step sidekiq run the following redis command in loop `conn.lmove(working_queue, queue, "RIGHT", "LEFT")` till all jobs are moved from provate queue to normal queue, but does not sets the above mentioned `orphan-#{jid}` (not needed becasue this is not a oprphan recovery) key hence it caused problems in our tracking. 
-So to make the tracking accurate we override this `bulk_requeue` method to do the same thing with a custom LUA script and in the script we set the `orphan-#{jid}` key with value of 0 if key doesnt exist but if the key exist from before we dont do any inc/dec on this key and let sidekiq maintain its lifecycle.
+So to make the tracking accurate we override this `bulk_requeue` method to do the same thing with a custom LUA script and in the script we set the `orphan-#{jid}` key with value of 0 if key doesnt exist but if the key exist from before we dont do any inc/dec on this key and let sidekiq maintain its lifecycle.g
 
 This way we make the tracking 100% accurate and reliable, without loosing any sidekiq in-built feature or tracking.
 
