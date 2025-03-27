@@ -65,12 +65,14 @@ end
 
 Superfetch - Superfetch is a sidekiq-pros mechanism which ensures that in event of process crash or termination the in-progress jobs are not lost. Each process maintains its own private queue (in redis itself not RAM) and it basically involes moving jobs from pod's `private_queue` back to `public queue` using redis `lmove`. 
 
-There are 3 methods inside superfetch from where we move jobs from private queues back to normal queues
-1. bulk_requeue - Runs on POD termination
-2. check_for_orphans - Runs on POD startup
-3. cleanup_the_dead  - Runs on POD startup
+There are 2 methods inside superfetch from where we move jobs from private queues back to normal queues
+1. bulk_requeue      - Runs on POD termination. This can happen for inifinite times
+2. check_for_orphans - Runs on POD startup. This will only happen 3 times after which the job is moved to Dead Queue (Poison Killed)
 
-The jobs recovered from 2nd (check_for_orphans) and 3rd (cleanup_the_dead) are called orphan jobs becasue they are getting recovered by another brand new process which is booting up. The orginal parent process was unable to superfetch its jobs itself for some reason.
+The Last Dead Cleanup Function
+cleanup_the_dead  - This is technically not receovery since this job will never run now. Runs on POD startup. This will only run 1 time and it will move job back to Dead Queue
+
+The jobs recovered from 2nd (check_for_orphans) are called orphan jobs becasue they are getting recovered by another brand new process which is booting up. The orginal parent process was unable to superfetch its jobs itself for some reason.
 Orphan Job Recovery will only happen 3 times after that this job will be moved to Dead Queue and this process is call Poison Kill.
 
 In `check_for_orphans` `cleanup_the_dead` a LUA script runs for each jobs it recoveres. Inside the script it create/increments a key inside sidekiq redis `orphan-#{jid}` (1 -> 2 ->3 -> Poison Kill) we use this existing key to tell if a particular job is superfetched. The problem is with `bulk_requeue` is that it only runs when a POD receives TERM signal and as a cleanup-step sidekiq run the following redis command in loop `conn.lmove(working_queue, queue, "RIGHT", "LEFT")` till all jobs are moved from provate queue to normal queue, but does not sets the above mentioned `orphan-#{jid}` (not needed becasue this is not a oprphan recovery) key hence it caused problems in our tracking. 
